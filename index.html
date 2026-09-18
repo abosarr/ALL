@@ -446,6 +446,9 @@
       <label for="commune-vote">Commune / Lieu de vote</label>
       <input type="text" id="commune-vote" placeholder="Ex : Commune de Mbao" />
 
+      <label for="centre-vote">Centre de vote</label>
+      <input type="text" id="centre-vote" placeholder="Ex : École Mbao 1" />
+
       <label for="bureau-vote">Numéro de bureau de vote</label>
       <input type="text" id="bureau-vote" placeholder="Ex : Bureau n°04" />
 
@@ -518,7 +521,7 @@
         <div class="stat"><div class="n" id="stat-non" style="color:var(--red);">0</div><div class="l">Refus « Non »</div></div>
       </div>
       <div class="toolbar">
-        <input type="text" class="search" id="search-input" placeholder="Rechercher par nom, CNI, quartier, commune ou bureau de vote…" />
+        <input type="text" class="search" id="search-input" placeholder="Rechercher par nom, CNI, quartier, commune, centre ou bureau de vote…" />
         <select class="search" id="filter-accord" style="max-width:150px;flex:none;">
           <option value="">Toutes les réponses</option>
           <option value="Oui">Oui uniquement</option>
@@ -595,7 +598,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 // 1) Collez ici l'URL de votre déploiement Google Apps Script (voir Code.gs fourni).
 // 2) Le code d'accès n'est plus stocké ici : il est saisi à l'écran et vérifié côté
 //    serveur (voir la constante SECRET dans Code.gs).
-const API_URL = "https://script.google.com/macros/s/AKfycbysSO9SGPRCyIKF1_StPfnXqXobJ1fTUj08MnFqFpEPDN-joffTPsRvnLShNxGQR_7W/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwgrlfdBmJXqDb_Awk73HGEOi7BzXvn1kvXbgH6nGVWrHfK8wPp_9wCyVk_HHfT776_/exec";
 let sessionSecret = "ICAM2026";
 
 // ---------- TABS ----------
@@ -718,12 +721,13 @@ document.getElementById('submit-btn').addEventListener('click', async ()=>{
   const telephone = document.getElementById('tel').value.trim();
   const carteElecteur = document.getElementById('carte-electeur').value.trim();
   const communeVote = document.getElementById('commune-vote').value.trim();
+  const centreVote = document.getElementById('centre-vote').value.trim();
   const bureauVote = document.getElementById('bureau-vote').value.trim();
   const accordEl = document.querySelector('input[name=accord]:checked');
   const errorEl = document.getElementById('error-msg');
   errorEl.style.display='none';
 
-  if(!nom || !cni || !quartier || !telephone || !communeVote || !bureauVote || !accordEl || !hasSignature){
+  if(!nom || !cni || !quartier || !telephone || !communeVote || !centreVote || !bureauVote || !accordEl || !hasSignature){
     errorEl.textContent = 'Merci de remplir tous les champs et de signer avant de confirmer.';
     errorEl.style.display='block';
     return;
@@ -736,7 +740,7 @@ document.getElementById('submit-btn').addEventListener('click', async ()=>{
   const record = {
     nom, matricule: cni, section: quartier, telephone,
     carteElecteur,
-    communeVote, bureauVote,
+    communeVote, centreVote, bureauVote,
     accord: accordEl.value,
     signature: canvas.toDataURL('image/png'),
     date: new Date().toISOString(),
@@ -759,6 +763,7 @@ document.getElementById('submit-btn').addEventListener('click', async ()=>{
       <div><span class="k">Quartier</span><span class="v">${escapeHtml(quartier)}</span></div>
       ${carteElecteur ? `<div><span class="k">Carte électeur</span><span class="v mono">${escapeHtml(carteElecteur)}</span></div>` : ''}
       <div><span class="k">Commune / Lieu de vote</span><span class="v">${escapeHtml(communeVote)}</span></div>
+      <div><span class="k">Centre de vote</span><span class="v">${escapeHtml(centreVote)}</span></div>
       <div><span class="k">Bureau de vote</span><span class="v">${escapeHtml(bureauVote)}</span></div>
       <div><span class="k">Adhésion</span><span class="v" style="color:${accordEl.value==='Oui'?'#3F6C51':'#A23E34'};">${accordEl.value}</span></div>
       <div><span class="k">Date</span><span class="v">${new Date().toLocaleString('fr-FR')}</span></div>
@@ -779,6 +784,7 @@ document.getElementById('new-entry-btn').addEventListener('click', ()=>{
   document.getElementById('tel').value='';
   document.getElementById('carte-electeur').value='';
   document.getElementById('commune-vote').value='';
+  document.getElementById('centre-vote').value='';
   document.getElementById('bureau-vote').value='';
   document.querySelectorAll('.accord-opt').forEach(o=>o.classList.remove('checked'));
   document.querySelectorAll('input[name=accord]').forEach(i=>i.checked=false);
@@ -893,7 +899,7 @@ function applyFiltersAndRender(){
   let filtered = allRecords.filter(r=>{
     if(accordFilter && r.accord !== accordFilter) return false;
     if(sectionFilter && r.section !== sectionFilter) return false;
-    if(q && !(r.nom.toLowerCase().includes(q) || r.matricule.toLowerCase().includes(q) || r.section.toLowerCase().includes(q) || (r.communeVote||'').toLowerCase().includes(q) || (r.bureauVote||'').toLowerCase().includes(q))) return false;
+    if(q && !(r.nom.toLowerCase().includes(q) || r.matricule.toLowerCase().includes(q) || r.section.toLowerCase().includes(q) || (r.communeVote||'').toLowerCase().includes(q) || (r.centreVote||'').toLowerCase().includes(q) || (r.bureauVote||'').toLowerCase().includes(q))) return false;
     return true;
   });
 
@@ -997,6 +1003,7 @@ function ficheHTML(r){
         <tr><td class="k">Téléphone</td><td class="v mono">${escapeHtml(r.telephone)}</td></tr>
         ${r.carteElecteur ? `<tr><td class="k">Carte électeur</td><td class="v mono">${escapeHtml(r.carteElecteur)}</td></tr>` : ''}
         <tr><td class="k">Commune / Lieu de vote</td><td class="v">${escapeHtml(r.communeVote||'')}</td></tr>
+        <tr><td class="k">Centre de vote</td><td class="v">${escapeHtml(r.centreVote||'')}</td></tr>
         <tr><td class="k">Bureau de vote</td><td class="v">${escapeHtml(r.bureauVote||'')}</td></tr>
         <tr><td class="k">Adhésion</td><td class="v" style="color:${r.accord==='Oui'?'#3F6C51':'#A23E34'};">${r.accord}${r.accord==='Oui' ? ' — Adhésion confirmée' : ' — Adhésion non confirmée'}</td></tr>
         <tr><td class="k">Date de confirmation</td><td class="v">${d.toLocaleDateString('fr-FR')} à ${d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</td></tr>
@@ -1171,6 +1178,7 @@ function carteMembreHTML(r){
           <div class="cm-v-row"><span class="k">Téléphone</span><span class="v">${escapeHtml(r.telephone)}</span></div>
           ${r.carteElecteur ? `<div class="cm-v-row"><span class="k">Carte électeur</span><span class="v">${escapeHtml(r.carteElecteur)}</span></div>` : ''}
           <div class="cm-v-row"><span class="k">Commune / Lieu de vote</span><span class="v">${escapeHtml(r.communeVote||'')}</span></div>
+          <div class="cm-v-row"><span class="k">Centre de vote</span><span class="v">${escapeHtml(r.centreVote||'')}</span></div>
           <div class="cm-v-row"><span class="k">Bureau de vote</span><span class="v">${escapeHtml(r.bureauVote||'')}</span></div>
           <div class="cm-v-row"><span class="k">Adhésion confirmée le</span><span class="v">${dateStr}</span></div>
         </div>
@@ -1206,11 +1214,11 @@ document.getElementById('refresh-btn').addEventListener('click', loadSubmissions
 
 document.getElementById('export-btn').addEventListener('click', ()=>{
   if(currentRecords.length===0) return;
-  const headers = ['Nom','CNI','Quartier','Telephone','CarteElecteur','CommuneLieuDeVote','BureauDeVote','Adhesion','Date'];
+  const headers = ['Nom','CNI','Quartier','Telephone','CarteElecteur','CommuneLieuDeVote','CentreDeVote','BureauDeVote','Adhesion','Date'];
   const rows = currentRecords.map(r=>{
     const d = new Date(r.date);
     const dateStr = d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-    return [r.nom, r.matricule, r.section, r.telephone, (r.carteElecteur||''), (r.communeVote||''), (r.bureauVote||''), r.accord, dateStr]
+    return [r.nom, r.matricule, r.section, r.telephone, (r.carteElecteur||''), (r.communeVote||''), (r.centreVote||''), (r.bureauVote||''), r.accord, dateStr]
       .map(v => `"${String(v).replace(/"/g,'""')}"`).join(',');
   });
   const csv = headers.join(',') + '\n' + rows.join('\n');
